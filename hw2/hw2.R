@@ -70,7 +70,7 @@ full_join(
   mutate(
     difference=model_saturated_estimate-model_restricted_estimate,
     percent_change = 100*difference/model_restricted_estimate
-    )
+  )
 
 # So we can see, in the new saturated model, the coefficients on educ, exper, exper_sq, and iq
 # are smaller in absolute value. This means that the omitted variable bias is of the same sign
@@ -112,16 +112,14 @@ Sigma_hat <- map(1:n, function(i) {
 
   return(U_hat_i^2 * (X_i %*% t(X_i)))
 
-  }) %>%
+}) %>%
   Reduce(`+`, .)/n # sum the matrices elementwise
 
 # This is our estimate of the asymptotic covariance matrix
 Lambda_hat <- alpha_hat %*% Sigma_hat %*% t(alpha_hat)
 
 # We can also get the asymptotic distribution and SE for the educ coefficient
-l <- as.matrix(c(0, 1, 0, 0, 0))
-
-t(l) %*% beta_hat # this is just the singular coefficient we want
+l <- as.matrix(c(0, 1, 0, 0, 0, 0, 0)) # this vector 'picks out' the singular coefficient we want
 
 # Standard error
 se <- ((t(l) %*% Lambda_hat %*% l) / n)^(1/2)
@@ -167,3 +165,7 @@ tidy(model_saturated) %>% filter(term=='educ') %>% pull(std.error) %>% cat('Esti
 # < 'Estimated SE of beta_educ_hat without homoskedastic assumption
 
 # so R's lm seems to strike a middle
+
+
+
+
