@@ -167,7 +167,9 @@ objective_function <- function(c, # c is the thing to optimize over
 }
 
 cat('Beta hat estimated by the alternative formula')
-beta_hat_from_alt_method <- stats::optim( # probably there is a way to solve this in a closed form? it is an unconstrained quadratic programming problem
+
+# One way to get the argmin is an off the shelf package
+beta_hat_from_numerical_solver <- stats::optim(
   par=c(0,0),
   fn=objective_function,
   x=x,
@@ -178,10 +180,16 @@ beta_hat_from_alt_method <- stats::optim( # probably there is a way to solve thi
   method='BFGS'
 )$par
 
+# We could also use the WLS closed form to solve it
+weighing_matrix <- kronecker(Phi_hat, (t(x) %*% x)/n)
+
+beta_hat_from_wls_formula <- 
+  solve(t(A) %*% weighing_matrix %*% A) %*% t(A) %*% weighing_matrix %*% pi_hat
+
 # it matches exactly
 cat('Beta hat (again)', beta_hat)
-cat('Beta hat from alternative method', beta_hat_from_alt_method)
-
+cat('Beta hat from numerical solver', beta_hat_from_numerical_solver)
+cat('Beta hat from WLS formula', beta_hat_from_wls_formula)
 # we can also look at the difference between the unrestricted and restricted
 # coefficients
 tibble(
