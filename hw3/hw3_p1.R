@@ -167,7 +167,7 @@ objective_function <- function(c, # c is the thing to optimize over
 }
 
 cat('Beta hat estimated by the alternative formula')
-beta_hat_from_alt_method <- optim( # probably there is a way to solve this in a closed form? it is an unconstrained quadratic programming problem
+beta_hat_from_alt_method <- stats::optim( # probably there is a way to solve this in a closed form? it is an unconstrained quadratic programming problem
   par=c(0,0),
   fn=objective_function,
   x=x,
