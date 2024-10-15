@@ -19,11 +19,6 @@ pi_2_hat <- lm(lhrwage2 ~ educ1 + educ2, data=df) %>% coef()
 # Slap it together into a 6 by 1 vector
 pi_hat <- c(pi_1_hat, pi_2_hat) %>% matrix()
 
-### XXXX
-
-
-
-### XXXX
 # Now make the Sigma_hat matrix which is a consistent estimator of Sigma by the WLLN
 # Remember Sigma=E[U_i U_i'] so we are going to use 1/n sum_{i=1}^n U_i_hat U_i_hat'
 # to make Sigma_hat.
@@ -137,10 +132,10 @@ beta_hat
 
 # Following the notation of the notes, in this scenario q=3, M=2, and K=2.
 
-a_11 <- matrix(c(1,0,0))
-a_12 <- matrix(c(0,1,0))
-a_21 <- matrix(c(1,0,0))
-a_22 <- matrix(c(0,0,1))
+a_11 <- matrix(c(1,0,0)) # this 'picks out' 1 from X'
+a_12 <- matrix(c(0,1,0)) # this 'picks out' Z_1 from X'
+a_21 <- matrix(c(1,0,0)) # this 'picks out' 1 from X'
+a_22 <- matrix(c(0,0,1)) # this 'picks out' Z_2 from X'
 
 A_1 <- cbind(a_11, a_12)
 A_2 <- cbind(a_21, a_22)
@@ -160,13 +155,15 @@ objective_function <- function(c, # c is the thing to optimize over
                                x, pi_hat, A, Phi_hat, n
 ) {
   
-  # This formula is gross. but it's just copy-paste from the homework text.
-  return(t((pi_hat - A %*% c)) %*% kronecker(Phi_hat, (t(x) %*% x)/n) %*% (pi_hat - A %*% c))
+  # This is the formula from the homework text
+  residual_vector <- pi_hat - A %*% c
+  weighing_matrix <- kronecker(Phi_hat, (t(x) %*% x)/n)
+  return(t(residual_vector) %*% weighing_matrix %*% residual_vector)
   
 }
 
 cat('Beta hat estimated by the alternative formula')
-optim( # probably there is a way to solve this in a closed form? it is a quadratic programming problem
+optim( # probably there is a way to solve this in a closed form? it is an unconstrained quadratic programming problem
   par=c(0,0),
   fn=objective_function,
   x=x,
@@ -176,6 +173,8 @@ optim( # probably there is a way to solve this in a closed form? it is a quadrat
   n=n,
   method='BFGS'
 )$par
+
+# it matches exactly
 
 # Just as a sanity check, try an off the shelf package
 pivoted_df <- df %>%
@@ -189,4 +188,6 @@ pivoted_df <- df %>%
 
 cat('Beta hat from off the shelf package lfe::felm')
 lfe::felm(lhrwage ~ educ | family, data=pivoted_df) %>% coef()
+
+# it estimates a beta_educ that is about 0.002 different
 
