@@ -152,37 +152,37 @@ A <- rbind(A_1, A_2)
 # Also following the notation of the notes, the choice variable is c, where
 # c is a 2 by 1 vector
 
+# Define some objects
 
+# 149 by 3
 x <- df %>% select(educ1, educ2) %>% cbind(1, .) %>% as.matrix()
 
+# 6 by 6
+weighing_matrix <- kronecker(Phi_hat, (t(x) %*% x)/n)
+
+# One way to get the argmin is an off the shelf package
 objective_function <- function(c, # c is the thing to optimize over
-                               x, pi_hat, A, Phi_hat, n
+                               weighing_matrix,
+                               pi_hat,
+                               A
 ) {
   
   # This is the formula from the homework text
   residual_vector <- pi_hat - A %*% c
-  weighing_matrix <- kronecker(Phi_hat, (t(x) %*% x)/n)
   return(t(residual_vector) %*% weighing_matrix %*% residual_vector)
   
 }
 
-cat('Beta hat estimated by the alternative formula')
-
-# One way to get the argmin is an off the shelf package
 beta_hat_from_numerical_solver <- stats::optim(
   par=c(0,0),
   fn=objective_function,
-  x=x,
   pi_hat=pi_hat,
   A=A,
-  Phi_hat=Phi_hat,
-  n=n,
+  weighing_matrix=weighing_matrix,
   method='BFGS'
 )$par
 
 # We could also use the WLS closed form to solve it
-weighing_matrix <- kronecker(Phi_hat, (t(x) %*% x)/n)
-
 beta_hat_from_wls_formula <- 
   solve(t(A) %*% weighing_matrix %*% A) %*% t(A) %*% weighing_matrix %*% pi_hat
 
@@ -190,6 +190,7 @@ beta_hat_from_wls_formula <-
 cat('Beta hat (again)', beta_hat)
 cat('Beta hat from numerical solver', beta_hat_from_numerical_solver)
 cat('Beta hat from WLS formula', beta_hat_from_wls_formula)
+
 # we can also look at the difference between the unrestricted and restricted
 # coefficients
 tibble(
