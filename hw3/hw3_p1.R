@@ -117,6 +117,7 @@ beta_hat <- solve(`R'PhiR_hat`) %*% `R'PhiY_hat`
 cat('Consistent estimate for beta:')
 beta_hat
 
+
 # 2 -----------------
 
 # The GLS predictor requires that:
@@ -143,6 +144,9 @@ A_2 <- cbind(a_21, a_22)
 # 6 x 2 matrix
 A <- rbind(A_1, A_2)
 
+# note, A is a mapping such that 
+# R_i (2 x 2) = kronecker(I, t(X_i)) (2 x 6) %*% A (6 x 2)
+
 # Now we plug this into that equation given in the homework question.
 
 # Also following the notation of the notes, the choice variable is c, where
@@ -163,7 +167,7 @@ objective_function <- function(c, # c is the thing to optimize over
 }
 
 cat('Beta hat estimated by the alternative formula')
-optim( # probably there is a way to solve this in a closed form? it is an unconstrained quadratic programming problem
+beta_hat_from_alt_method <- optim( # probably there is a way to solve this in a closed form? it is an unconstrained quadratic programming problem
   par=c(0,0),
   fn=objective_function,
   x=x,
@@ -175,6 +179,18 @@ optim( # probably there is a way to solve this in a closed form? it is an uncons
 )$par
 
 # it matches exactly
+cat('Beta hat (again)', beta_hat)
+cat('Beta hat from alternative method', beta_hat_from_alt_method)
+
+# we can also look at the difference between the unrestricted and restricted
+# coefficients
+tibble(
+  unrestricted=as.numeric(pi_hat),
+  restricted=as.numeric(A %*% beta_hat)
+) %>%
+  mutate(diff=unrestricted-restricted) %>%
+  print()
+
 
 # Just as a sanity check, try an off the shelf package
 pivoted_df <- df %>%
