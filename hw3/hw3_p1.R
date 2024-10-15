@@ -11,7 +11,7 @@ df <- readMat('/Users/saragong/ec2120/hw3/twins.mat') %>%
 
 n <- nrow(df)
 
-# First I am estimating pi=[pi_1, pi_2], which are the coefficients in the unrestricted model.
+# First I am estimating pi=[pi_1, pi_2], which are the coefficients in the unrestricted least squares model.
 # Then we can estimate the matrix Sigma=E[U_i U_i'].
 pi_1_hat <- lm(lhrwage1 ~ educ1 + educ2, data=df) %>% coef()
 pi_2_hat <- lm(lhrwage2 ~ educ1 + educ2, data=df) %>% coef()
@@ -19,6 +19,11 @@ pi_2_hat <- lm(lhrwage2 ~ educ1 + educ2, data=df) %>% coef()
 # Slap it together into a 6 by 1 vector
 pi_hat <- c(pi_1_hat, pi_2_hat) %>% matrix()
 
+### XXXX
+
+
+
+### XXXX
 # Now make the Sigma_hat matrix which is a consistent estimator of Sigma by the WLLN
 # Remember Sigma=E[U_i U_i'] so we are going to use 1/n sum_{i=1}^n U_i_hat U_i_hat'
 # to make Sigma_hat.
@@ -36,7 +41,7 @@ Sigma_hat <- map(
     
     # The predictor vector (intercept and two predictors, so 3 by 1)
     X_i <- df %>% 
-      select(lhrwage1, lhrwage2) %>% 
+      select(educ1, educ2) %>% 
       slice(i) %>% 
       as.numeric() %>%
       c(1, .) %>% # a 1 for the intercept term
@@ -52,6 +57,21 @@ Sigma_hat <- map(
 )  %>%
   Reduce(`+`, .)/n # sum the matrices elementwise
 
+# Below is an equivalent way to code this up
+
+# U_1_hat <- lm(lhrwage1 ~ educ1 + educ2, data=df) %>% residuals()
+# U_2_hat <- lm(lhrwage2 ~ educ1 + educ2, data=df) %>% residuals()
+# 
+# sigma_11 <- sum(U_1_hat^2)/n
+# sigma_12 <- sum(U_1_hat*U_2_hat)/n
+# sigma_21 <- sum(U_1_hat*U_2_hat)/n
+# sigma_22 <- sum(U_2_hat^2)/n
+# 
+# Sigma_hat <- matrix(
+#   c(sigma_11, sigma_12, sigma_21, sigma_22),
+#   nrow=2, ncol=2
+# )
+
 # the weighting matrix Phi is the inverse of Sigma
 # we construct Phi_hat as the inverse of Sigma_hat
 # and it is consistent for Phi by Slutsky
@@ -66,7 +86,7 @@ Phi_hat <- solve(Sigma_hat)
     
     # R_i is a 2 by 2 matrix
     R_i <- df %>% 
-      select(lhrwage1, lhrwage2) %>% 
+      select(educ1, educ2) %>% 
       slice(i) %>% 
       as.matrix() %>% 
       t() %>%
@@ -83,7 +103,7 @@ Phi_hat <- solve(Sigma_hat)
     
     # R_i is a 2 by 2 matrix
     R_i <- df %>% 
-      select(lhrwage1, lhrwage2) %>% 
+      select(educ1, educ2) %>% 
       slice(i) %>% 
       as.matrix() %>% 
       t() %>%
@@ -145,7 +165,8 @@ objective_function <- function(c, # c is the thing to optimize over
   
 }
 
-optim(
+cat('Beta hat estimated by the alternative formula')
+optim( # probably there is a way to solve this in a closed form? it is a quadratic programming problem
   par=c(0,0),
   fn=objective_function,
   x=x,
@@ -167,5 +188,5 @@ pivoted_df <- df %>%
   pivot_wider()
 
 cat('Beta hat from off the shelf package lfe::felm')
-lfe::felm(lhrwage ~ educ | family, data=pivoted_df) %>% tidy()
+lfe::felm(lhrwage ~ educ | family, data=pivoted_df) %>% coef()
 
