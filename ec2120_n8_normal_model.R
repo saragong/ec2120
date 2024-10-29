@@ -46,7 +46,7 @@ dim(q)
 dim(d)
 dim(s)
 
-# Confirm q is orthonormal 
+# Confirm q is orthonormal
 all.equal.numeric(q %*% t(q), diag(ncol(q)), tolerance = 1e-10) # should equal I_n up to rounding error
 all.equal.numeric(s %*% t(s), diag(ncol(s)), tolerance = 1e-10) # should equal I_k up to rounding error
 
@@ -72,6 +72,7 @@ as.numeric(coef(model))
 as.numeric(b)
 as.numeric(beta + sigma * (s %*% solve(d) %*% v_star_1))
 
+# The following two things should be equal exactly
 sum(residuals(model)^2)
 sigma^2 * sum(v_star_2^2)
 
