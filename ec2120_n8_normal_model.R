@@ -70,12 +70,37 @@ b <- solve(d %*% t(s)) %*% y_star_1
 # The following three things should be equal exactly
 as.numeric(coef(model))
 as.numeric(b)
-as.numeric(beta + sigma * (s %*% solve(d) %*% v_star_1))
+as.numeric(beta + sigma * (s %*% solve(d) %*% v_star_1)) # note this is a function of unobservable parameters
 
 # The following two things should be equal exactly
 sum(residuals(model)^2)
-sigma^2 * sum(v_star_2^2)
+sigma^2 * sum(v_star_2^2) # note this is a function of unobservable parameters
 
+# T test
+sigma_sq_hat <- sum(residuals(model)^2)/(n-k)
 
+l <- c(0, 1, 0, 0) %>% as.matrix() # pick out beta 1 hat
+se <- sqrt(sigma_sq_hat * t(l) %*% solve(t(x) %*% x) %*% l)
+
+numerator <- (t(l) %*% (b-beta)) / se # N(0,1)
+denominator <- sqrt(SSR/(sigma^2 * (n-k)))
+
+pivot <- t(l) %*% (b - beta) / se # = numerator/denominator
+
+# F test
+r <- 3
+L <- matrix( # picks out the non-intercept terms
+  c(
+    0,1,0,0,
+    0,0,1,0,
+    0,0,0,1
+  ), nrow=3, byrow=T
+)
+
+L %*% beta # 3 x 1
+
+cov_Lb_hat <- sigma_sq_hat * (L %*% solve(t(x) %*% x) %*% t(L))
+
+#pivot <- t(L %*% b - L %*% beta) %*% solve(cov_Lb_hat) %*% 
 
 
